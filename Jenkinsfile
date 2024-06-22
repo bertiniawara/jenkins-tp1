@@ -2,12 +2,6 @@ pipeline {
     agent any
 
     stages {
-        stage('Checkout') {
-            steps {
-                // Aucune action de checkout nécessaire ici
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 script {

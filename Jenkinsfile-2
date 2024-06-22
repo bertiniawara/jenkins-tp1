@@ -2,62 +2,13 @@ pipeline {
     agent any
 
     stages {
-        stage('Deploy to Kubernetes') {
+        stage('Deploy App on k8s') {
             steps {
-                script {
-                    // Déploiement Kubernetes
-                    def deployment = """
-                    apiVersion: apps/v1
-                    kind: Deployment
-                    metadata:
-                      name: my-webapp
-                    spec:
-                      replicas: 2
-                      selector:
-                        matchLabels:
-                          app: my-webapp
-                      template:
-                        metadata:
-                          labels:
-                            app: my-webapp
-                        spec:
-                          containers:
-                          - name: my-webapp
-                            image: my-webapp:latest
-                            ports:
-                            - containerPort: 80
-                    """
-                    
-                    // Service Kubernetes en mode NodePort
-                    def service = """
-                    apiVersion: v1
-                    kind: Service
-                    metadata:
-                      name: my-webapp
-                    spec:
-                      type: NodePort
-                      selector:
-                        app: my-webapp
-                      ports:
-                      - port: 80
-                        targetPort: 80
-                    """
-                    
-                    // Écrire les fichiers de configuration dans le workspace
-                    writeFile(file: 'deployment.yaml', text: deployment)
-                    writeFile(file: 'service.yaml', text: service)
-
-                    // Appliquer les ressources Kubernetes avec kubectl
-                    stage('Deploy App on k8s') {
-                        steps {
-                            withCredentials([
-                                file(credentialsId: 'kubeconfig')
-                            ]) {
-                                sh 'kubectl --kubeconfig ${CREDENTIALS_kubeconfig} apply -f deployment.yaml'
-                                sh 'kubectl --kubeconfig ${CREDENTIALS_kubeconfig} apply -f service.yaml'
-                            }
-                        }
-                    }
+                withCredentials([
+                    file(credentialsId: 'kubeconfig')
+                ]) {
+                    sh 'kubectl --kubeconfig ${CREDENTIALS_kubeconfig} apply -f deployment.yaml'
+                    sh 'kubectl --kubeconfig ${CREDENTIALS_kubeconfig} apply -f service.yaml'
                 }
             }
         }

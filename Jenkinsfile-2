@@ -43,9 +43,20 @@ pipeline {
                         targetPort: 80
                     """
                     
+                    // Écrire les fichiers de configuration dans le workspace
+                    writeFile(file: 'deployment.yaml', text: deployment)
+                    writeFile(file: 'service.yaml', text: service)
+
                     // Appliquer les ressources Kubernetes avec kubectl
-                    withKubeConfig([credentialsId: 'kubeconfig']) {
-                        kubernetesDeploy(manifests: [deployment, service])
+                    stage('Deploy App on k8s') {
+                        steps {
+                            withCredentials([
+                                file(credentialsId: 'kubeconfig')
+                            ]) {
+                                sh 'kubectl --kubeconfig ${CREDENTIALS_kubeconfig} apply -f deployment.yaml'
+                                sh 'kubectl --kubeconfig ${CREDENTIALS_kubeconfig} apply -f service.yaml'
+                            }
+                        }
                     }
                 }
             }

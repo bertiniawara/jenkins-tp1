@@ -20,7 +20,7 @@ pipeline {
             steps {
                 script {
                     def customImage = docker.image("my-webapp:latest")
-                    customImage.run("-p 8080:80")
+                    customImage.run("-p 8083:80")
                 }
             }
         }

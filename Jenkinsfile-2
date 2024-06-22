@@ -1,0 +1,59 @@
+pipeline {
+    agent any
+
+    environment {
+        KUBECONFIG = '/home/emmanuel/.kube/config'
+    }
+
+    stages {
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    // Déploiement Kubernetes
+                    def deployment = """
+                    apiVersion: apps/v1
+                    kind: Deployment
+                    metadata:
+                      name: my-webapp
+                    spec:
+                      replicas: 2
+                      selector:
+                        matchLabels:
+                          app: my-webapp
+                      template:
+                        metadata:
+                          labels:
+                            app: my-webapp
+                        spec:
+                          containers:
+                          - name: my-webapp
+                            image: my-webapp:latest
+                            ports:
+                            - containerPort: 80
+                    """
+                    
+                    // Service Kubernetes en mode NodePort
+                    def service = """
+                    apiVersion: v1
+                    kind: Service
+                    metadata:
+                      name: my-webapp
+                    spec:
+                      type: NodePort
+                      selector:
+                        app: my-webapp
+                      ports:
+                      - port: 80
+                        targetPort: 80
+                    """
+                    
+                    // Appliquer les ressources Kubernetes avec kubectl
+                    withKubeConfig([credentialsId: 'minikube-config']) {
+                        sh 'kubectl apply -f -', deployment
+                        sh 'kubectl apply -f -', service
+                    }
+                }
+            }
+        }
+    }
+}

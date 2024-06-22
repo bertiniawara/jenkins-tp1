@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    environment {
-        KUBECONFIG = '/home/emmanuel/.kube/config'
-    }
-
     stages {
         stage('Deploy to Kubernetes') {
             steps {
@@ -48,9 +44,8 @@ pipeline {
                     """
                     
                     // Appliquer les ressources Kubernetes avec kubectl
-                    withKubeConfig([credentialsId: 'minikube-config']) {
-                        sh 'kubectl apply -f -', deployment
-                        sh 'kubectl apply -f -', service
+                    withKubeConfig([credentialsId: 'kubeconfig']) {
+                        kubernetesDeploy(manifests: [deployment, service])
                     }
                 }
             }

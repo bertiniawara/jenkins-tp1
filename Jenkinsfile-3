@@ -1,0 +1,42 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.build("emmanuel236/my-webapp:latest", ".")
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'Dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    script {
+                        sh 'docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}'
+                        sh 'docker push emmanuel236/my-webapp:latest'
+                    }
+                }
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    def customImage = docker.image("emmanuel236/my-webapp:latest")
+                    customImage.run("-p 8081:80")
+                }
+            }
+        }
+
+        stage('Deploy App on k8s') {
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh 'kubectl --kubeconfig=$KUBECONFIG apply -f deployment.yaml'
+                    sh 'kubectl --kubeconfig=$KUBECONFIG apply -f service.yaml'
+                }
+            }
+        }
+    }
+}

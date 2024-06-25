@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'docker:latest'
+            args '-v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
 
     stages {
         stage('Build Docker Image') {
@@ -25,7 +30,7 @@ pipeline {
             steps {
                 script {
                     def customImage = docker.image("emmanuel236/my-webapp:latest")
-                    customImage.run("-p 8081:80")
+                    customImage.run("-p 8083:80")
                 }
             }
         }
